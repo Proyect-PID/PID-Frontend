@@ -6,12 +6,12 @@ export const JoyeriaRoutes = () => {
     return (
         <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/anillos" element={<AnillosPage />} />
-            <Route path="/collares" element={<CollaresPage />} />
-            <Route path="/pendientes" element={<PendientesPage />} />
-            <Route path="/pulseras" element={<PulserasPage />} />
-            <Route path="/relojes" element={<RelojesPage />} />
-            <Route path="/cart" element={<CartPage />} />
+            <Route path="/Anillos" element={<AnillosPage />} />
+            <Route path="/Collares" element={<CollaresPage />} />
+            <Route path="/Pendientes" element={<PendientesPage />} />
+            <Route path="/Pulseras" element={<PulserasPage />} />
+            <Route path="/Relojes" element={<RelojesPage />} />
+            <Route path="/Cart" element={<CartPage />} />
         </Routes>
     )
 }

@@ -1,213 +1,119 @@
-import { useState } from 'react';
-import { ArrowUpward, ExpandMore, Filter, Star } from '@mui/icons-material'
-import { Accordion, AccordionDetails, AccordionSummary, Badge, Breadcrumbs, Button, Card, CardContent, Checkbox, FormControl, FormControlLabel, FormGroup, Grid, InputLabel, MenuItem, Select, Typography } from '@mui/material'
+import { useEffect, useState } from 'react';
+import { Breadcrumbs, Button, Card, CardContent, Dialog, DialogActions, DialogContent } from '@mui/material'
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { NavLink } from 'react-router-dom'
-import { Award, Clock, Droplets, Gem, Settings, Watch } from 'lucide-react';
+import { Award, Clock, Droplets, Gem, Settings, ShoppingCartIcon, Watch } from 'lucide-react';
 import { JoyeriaAppLayout } from '../../layout/JoyeriaAppLayout';
+import { Product } from '../../helpers';
+import { addProductToCart } from '../../services/cartServices';
+
+const watchFeatures = [
+    {
+        feature: "Movimiento",
+        name: "Tipos de Movimiento",
+        description: "Automático, cuarzo y cuerda manual",
+        icon: <Settings className="h-6 w-6" />,
+    },
+    {
+        feature: "Resistencia",
+        name: "Resistencia al Agua",
+        description: "Desde 30m hasta 300m de profundidad",
+        icon: <Droplets className="h-6 w-6" />,
+    },
+    {
+        feature: "Materiales",
+        name: "Materiales Premium",
+        description: "Oro, platino, acero, titanio y cerámica",
+        icon: <Gem className="h-6 w-6" />,
+    },
+    {
+        feature: "Precisión",
+        name: "Precisión Suiza",
+        description: "Certificados cronómetros de alta precisión",
+        icon: <Award className="h-6 w-6" />,
+    },
+    {
+        feature: "Diseño",
+        name: "Diseño Atemporal",
+        description: "Desde clásicos hasta modernos deportivos",
+        icon: <Watch className="h-6 w-6" />,
+    },
+    {
+        feature: "Garantía",
+        name: "Garantía Internacional",
+        description: "Servicio y garantía mundial",
+        icon: <Clock className="h-6 w-6" />,
+    },
+]
+
+
+const caseSizes = [
+    { size: "32-36mm", name: "Pequeño", description: "Ideal para muñecas delicadas" },
+    { size: "37-40mm", name: "Mediano", description: "Tamaño versátil y clásico" },
+    { size: "41-44mm", name: "Grande", description: "Presencia deportiva y moderna" },
+    { size: "45mm+", name: "Extra Grande", description: "Máximo impacto visual" },
+]
+
 
 export const RelojesPage = () => {
 
-    const [sortValue, setSortValue] = useState('featured');
+    const [watches, setwatches] = useState([])
+    const [loading, setLoading] = useState(true)
 
-    const handleChange = (event) => {
-        setSortValue(event.target.value);
+    const token = localStorage.getItem('accessToken');
+
+    //modal
+    const [open, setOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+
+    const handleClickOpen = (watch) => {
+        setSelectedProduct(watch)
+        setOpen(true);
     };
 
-    const watchCategories = [
-        { id: "dress", name: "Relojes de Vestir" },
-        { id: "sport", name: "Relojes Deportivos" },
-        { id: "casual", name: "Relojes Casuales" },
-        { id: "luxury", name: "Relojes de Lujo" },
-        { id: "chronograph", name: "Cronógrafos" },
-        { id: "diving", name: "Relojes de Buceo" },
-        { id: "vintage", name: "Relojes Vintage" },
-        { id: "smartwatch", name: "Relojes Inteligentes" },
-    ]
+    const handleClose = (watch) => {
+        setOpen(false);
+        setSelectedProduct(null)
+    };
 
-    const featuredCollections = [
-        {
-            id: 1,
-            name: "Colección Clásica",
-            description: "Elegancia atemporal para ocasiones especiales",
-            image: "/reloje.webp",
-        },
-        {
-            id: 2,
-            name: "Colección Deportiva",
-            description: "Precisión y resistencia para el estilo de vida activo",
-            image: "/reloje.webp",
-        },
-        {
-            id: 3,
-            name: "Colección Luxury",
-            description: "Obras maestras de la alta relojería suiza",
-            image: "/reloje.webp",
-        },
-    ]
+    //relojes
+    useEffect(() => {
+        async function fetchWatches() {
+            const data = await Product.geteWatches();
+            if (data) {
+                const allWatches = Object.values(data)
+                    .flat()
+                    .filter((item) => item)//elimina los nulos
+                setwatches(allWatches)
+            }
+            setLoading(false)
 
-    const watches = [
-        {
-            id: 1,
-            name: "Reloj Clásico Oro",
-            price: "€8,950",
-            originalPrice: null,
-            image: "/reloje.webp",
-            rating: 5,
-            isNew: true,
-            category: "Vestir",
-            material: "Oro Amarillo 18k",
-            movement: "Automático",
-            caseSize: "40mm",
-            waterResistance: "30m",
-        },
-        {
-            id: 2,
-            name: "Cronógrafo Deportivo",
-            price: "€3,450",
-            originalPrice: "€3,850",
-            image: "/reloje.webp",
-            rating: 5,
-            isNew: false,
-            category: "Deportivo",
-            material: "Acero Inoxidable",
-            movement: "Cuarzo",
-            caseSize: "42mm",
-            waterResistance: "100m",
-        },
-        {
-            id: 3,
-            name: "Reloj Vintage Cuero",
-            price: "€2,150",
-            originalPrice: null,
-            image: "/reloje.webp",
-            rating: 4,
-            isNew: false,
-            category: "Vintage",
-            material: "Acero/Cuero",
-            movement: "Manual",
-            caseSize: "38mm",
-            waterResistance: "50m",
-        },
-        {
-            id: 4,
-            name: "Reloj Buceo Profesional",
-            price: "€4,750",
-            originalPrice: null,
-            image: "/reloje.webp",
-            rating: 5,
-            isNew: true,
-            category: "Buceo",
-            material: "Titanio",
-            movement: "Automático",
-            caseSize: "44mm",
-            waterResistance: "300m",
-        },
-        {
-            id: 5,
-            name: "Reloj Dress Platino",
-            price: "€12,500",
-            originalPrice: null,
-            image: "/reloje.webp",
-            rating: 5,
-            isNew: false,
-            category: "Lujo",
-            material: "Platino",
-            movement: "Automático",
-            caseSize: "39mm",
-            waterResistance: "30m",
-        },
-        {
-            id: 6,
-            name: "Smartwatch Premium",
-            price: "€1,250",
-            originalPrice: null,
-            image: "/reloje.webp",
-            rating: 4,
-            isNew: true,
-            category: "Inteligente",
-            material: "Acero/Cerámica",
-            movement: "Digital",
-            caseSize: "45mm",
-            waterResistance: "50m",
-        },
-        {
-            id: 7,
-            name: "Reloj Casual Oro Rosa",
-            price: "€2,950",
-            originalPrice: "€3,200",
-            image: "/reloje.webp",
-            rating: 4,
-            isNew: false,
-            category: "Casual",
-            material: "Oro Rosa 18k",
-            movement: "Cuarzo",
-            caseSize: "36mm",
-            waterResistance: "100m",
-        },
-        {
-            id: 8,
-            name: "Cronógrafo Vintage",
-            price: "€5,850",
-            originalPrice: null,
-            image: "/reloje.webp",
-            rating: 5,
-            isNew: false,
-            category: "Cronógrafo",
-            material: "Acero Inoxidable",
-            movement: "Automático",
-            caseSize: "41mm",
-            waterResistance: "200m",
-        },
-    ]
+        }
+        fetchWatches()
+    }, []);
 
-    const watchFeatures = [
-        {
-            feature: "Movimiento",
-            name: "Tipos de Movimiento",
-            description: "Automático, cuarzo y cuerda manual",
-            icon: <Settings className="h-6 w-6" />,
-        },
-        {
-            feature: "Resistencia",
-            name: "Resistencia al Agua",
-            description: "Desde 30m hasta 300m de profundidad",
-            icon: <Droplets className="h-6 w-6" />,
-        },
-        {
-            feature: "Materiales",
-            name: "Materiales Premium",
-            description: "Oro, platino, acero, titanio y cerámica",
-            icon: <Gem className="h-6 w-6" />,
-        },
-        {
-            feature: "Precisión",
-            name: "Precisión Suiza",
-            description: "Certificados cronómetros de alta precisión",
-            icon: <Award className="h-6 w-6" />,
-        },
-        {
-            feature: "Diseño",
-            name: "Diseño Atemporal",
-            description: "Desde clásicos hasta modernos deportivos",
-            icon: <Watch className="h-6 w-6" />,
-        },
-        {
-            feature: "Garantía",
-            name: "Garantía Internacional",
-            description: "Servicio y garantía mundial",
-            icon: <Clock className="h-6 w-6" />,
-        },
-    ]
-
-    const caseSizes = [
-        { size: "32-36mm", name: "Pequeño", description: "Ideal para muñecas delicadas" },
-        { size: "37-40mm", name: "Mediano", description: "Tamaño versátil y clásico" },
-        { size: "41-44mm", name: "Grande", description: "Presencia deportiva y moderna" },
-        { size: "45mm+", name: "Extra Grande", description: "Máximo impacto visual" },
-    ]
-
-
+    //agregar al carrito
+    const handleAddToCart = async (product) => {
+        if (!product || !product.id) {
+            console.error("El producto no tiene un id definido.");
+            return;
+        }
+        setLoading(true); // Activar el estado de carga al inicio
+        try {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                console.error("No hay token de autenticación, por favor inicia sesión.");
+                return;
+            }
+            await addProductToCart(product, token);
+            // Opcional: mostrar mensaje de éxito o actualizar estado global del carrito
+        } catch (error) {
+            // Manejar error (mostrar alerta, etc.)
+            console.error("Error al agregar al carrito:", error);
+        } finally {
+            setLoading(false); // Desactivar el estado de carga al final (éxito o error)
+        }
+    };
     return (
         <JoyeriaAppLayout>
             {/* Breadcrumb */}
@@ -244,39 +150,11 @@ export const RelojesPage = () => {
                             Desde elegantes relojes de vestir hasta robustos cronógrafos deportivos, cada timepiece representa la
                             perfecta fusión entre artesanía tradicional suiza y innovación contemporánea.
                         </p>
-                        <div className="flex space-x-4 p-2">
-                            <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100">
-                                Ver Destacados
-                            </Button>
-                        </div>
+
                     </div>
                 </div>
             </section>
 
-            {/* Featured Collections */}
-            <section className="py-16 bg-white">
-                <div className="container mx-auto px-4">
-                    <h2 className="text-3xl font-serif text-gray-900 mb-8 text-center">Colecciones Destacadas</h2>
-                    <div className="grid md:grid-cols-3 gap-8">
-                        {featuredCollections.map((collection) => (
-                            <div key={collection.id} className="group cursor-pointer relative overflow-hidden rounded-lg">
-                                <div className="relative h-64 overflow-hidden">
-                                    <img
-                                        src={collection.image || "/placeholder.svg"}
-                                        alt={collection.name}
-                                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent" />
-                                </div>
-                                <div className="absolute bottom-0 left-0 right-0 p-6 text-black">
-                                    <h3 className="text-xl font-semibold mb-2">{collection.name}</h3>
-                                    <p className="text-black mb-4">{collection.description}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
 
             {/* Watch Features */}
             <section className="py-16 bg-gray-50">
@@ -339,246 +217,9 @@ export const RelojesPage = () => {
             <section className="py-12 bg-gray-50">
                 <div className="container mx-auto px-4">
                     <div className="flex flex-col md:flex-row gap-8">
-                        {/* Sidebar Filters */}
-                        <div className="w-full md:w-1/4">
-                            <div className="bg-white p-6 rounded-lg shadow-sm sticky top-4">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-lg font-medium">Filtros</h3>
-                                    <Button variant="ghost" size="sm" className="text-sm text-gray-500">
-                                        Limpiar
-                                    </Button>
-                                </div>
-                                <Accordion>
-                                    <AccordionSummary expandIcon={<ExpandMore />}>
-                                        <Typography variant="body2" fontWeight="medium">
-                                            Tipo de Reloj
-                                        </Typography>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        {watchCategories.map((category) => (
-                                            <FormControlLabel
-                                                key={category.id}
-                                                control={<Checkbox size="small" />}
-                                                label={
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        {category.name}
-                                                    </Typography>
-                                                }
-                                            />
-                                        ))}
-                                    </AccordionDetails>
-                                </Accordion>
-
-                                <Accordion>
-                                    <AccordionSummary expandIcon={<ExpandMore />}>
-                                        <Typography fontSize="0.875rem" fontWeight={500}>Movimiento</Typography>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        <FormGroup>
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Automatico</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Cuarzo</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Manual</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Digital</Typography>}
-                                            />
-                                        </FormGroup>
-                                    </AccordionDetails>
-                                </Accordion>
-
-                                <Accordion>
-                                    <AccordionSummary expandIcon={<ExpandMore />}>
-                                        <Typography fontSize="0.875rem" fontWeight={500}>Tamaño de Caja</Typography>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        <FormGroup>
-                                            {caseSizes.map((size, index) => (
-                                                <div key={index} className="flex items-center">
-                                                    <input
-                                                        type="checkbox"
-                                                        id={`size-${index}`}
-                                                        className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
-                                                    />
-                                                    <label htmlFor={`size-${index}`} className="ml-2 text-sm text-gray-600">
-                                                        {size.size} - {size.name}
-                                                    </label>
-                                                </div>
-                                            ))}
-                                        </FormGroup>
-                                    </AccordionDetails>
-                                </Accordion>
-                                <Accordion>
-                                    <AccordionSummary expandIcon={<ExpandMore />}>
-                                        <Typography fontSize="0.875rem" fontWeight={500}>Precio</Typography>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        <FormGroup>
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary"> Menos de €2,000</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">€2,000 - €5,000</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">    €5,000 - €10,000</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">  €10,000 - €20,000</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">      Más de €20,000</Typography>}
-                                            />
-                                        </FormGroup>
-                                    </AccordionDetails>
-                                </Accordion>
-
-                                <Accordion>
-                                    <AccordionSummary expandIcon={<ExpandMore />}>
-                                        <Typography fontSize="0.875rem" fontWeight={500}>Material de Caja</Typography>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        <FormGroup>
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Acero Inoxidable</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Oro Amarillo</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Oro Rosa</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Platino</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Titanio</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Ceramica</Typography>}
-                                            />
-
-                                        </FormGroup>
-                                    </AccordionDetails>
-                                </Accordion>
-                                <Accordion>
-                                    <AccordionSummary expandIcon={<ExpandMore />}>
-                                        <Typography fontSize="0.875rem" fontWeight={500}>Resistencia al Agua</Typography>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        <FormGroup>
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">30m - Salpicaduras</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary"> 50m - Natación</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">100m - Snorkel</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">200m+ - Buceo</Typography>}
-                                            />
-
-                                        </FormGroup>
-                                    </AccordionDetails>
-                                </Accordion>
-                                <Accordion>
-                                    <AccordionSummary expandIcon={<ExpandMore />}>
-                                        <Typography fontSize="0.875rem" fontWeight={500}>Caracteristicas</Typography>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        <FormGroup>
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Cronógrafo</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Fecha</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">GMT</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Fase Lunar</Typography>}
-                                            />
-
-                                        </FormGroup>
-                                    </AccordionDetails>
-                                </Accordion>
-                                <div className="mt-6">
-                                    <Button className="w-full bg-gray-900 hover:bg-gray-800">Aplicar Filtros</Button>
-                                </div>
-                            </div>
-                        </div>
 
                         {/* Products Grid */}
-                        <div className="w-full md:w-3/4">
-                            <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                    <div>
-                                        <h2 className="text-xl font-medium text-gray-900">Relojes</h2>
-                                        <p className="text-sm text-gray-500">Mostrando {watches.length} productos</p>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-center">
-                                            <label htmlFor="sort" className="text-sm text-gray-600 mr-2">
-                                                Ordenar por:
-                                            </label>
-                                            <FormControl sx={{ width: 180, height: 36 }} size="small">
-                                                <InputLabel id="sort-label">Ordenar por</InputLabel>
-                                                <Select
-                                                    labelId="sort-label"
-                                                    value={sortValue}
-                                                    onChange={handleChange}
-                                                    label="Ordenar por"
-                                                    sx={{ fontSize: '0.875rem' }} // text-sm equivalente
-                                                >
-                                                    <MenuItem value="featured">Destacados</MenuItem>
-                                                    <MenuItem value="price-asc">Precio: Menor a Mayor</MenuItem>
-                                                    <MenuItem value="price-desc">Precio: Mayor a Menor</MenuItem>
-                                                    <MenuItem value="newest">Más Recientes</MenuItem>
-                                                    <MenuItem value="rating">Mejor Valorados</MenuItem>
-                                                </Select>
-                                            </FormControl>
-                                        </div>
-                                        <div className="flex border rounded-md">
-                                            <Button variant="ghost" size="sm" className="h-9 px-2.5">
-                                                <Filter className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="sm" className="h-9 px-2.5">
-                                                <ArrowUpward className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div className="w-full md:w-4/4">
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {watches.map((watch) => (
                                     <Card
@@ -594,8 +235,6 @@ export const RelojesPage = () => {
                                                     height={300}
                                                     className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
                                                 />
-                                                {watch.isNew && <Badge className="absolute top-3 left-3 ">Nuevo</Badge>}
-                                                {watch.originalPrice && <Badge className="absolute top-3 left-3">Oferta</Badge>}
                                                 <Button
                                                     size="sm"
                                                     variant="secondary"
@@ -605,31 +244,27 @@ export const RelojesPage = () => {
                                                 </Button>
                                             </div>
                                             <div className="p-4">
-                                                <div className="flex items-center mb-1">
-                                                    {[...Array(5)].map((_, i) => (
-                                                        <Star
-                                                            key={i}
-                                                            className={`h-4 w-4 ${i < watch.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                                                                }`}
-                                                        />
-                                                    ))}
-                                                </div>
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <h3 className="font-medium text-gray-900">{watch.name}</h3>
-                                                    <div className="text-right">
-                                                        {watch.originalPrice && (
-                                                            <span className="text-sm text-gray-500 line-through block">{watch.originalPrice}</span>
-                                                        )}
-                                                        <span className="text-lg font-semibold text-gray-900">{watch.price}</span>
-                                                    </div>
-                                                </div>
+                                                <h3 className="font-medium text-gray-900 mb-2">{watch.name}</h3>
+                                                <span className="text-lg font-semibold text-gray-900 mb-4 block">{watch.price}$</span>
+
+                                                {/* Contenedor vertical para botones con ancho completo */}
                                                 <div className="flex flex-col space-y-2">
-                                                    <div className="flex justify-between text-sm text-gray-500">
-                                                        <span>{watch.category}</span>
-                                                        <span>{watch.material}</span>
-                                                    </div>
-                                                    <Button size="sm" className="w-full bg-gray-900 hover:bg-gray-800">
+                                                    <Button
+                                                        variant="contained"
+                                                        onClick={() => handleClickOpen(watch)}
+                                                        fullWidth
+                                                    >
                                                         Ver Detalles
+                                                    </Button>
+
+                                                    <Button
+                                                        variant="outlined"
+                                                        startIcon={token ? <ShoppingCartIcon /> : null} // Icono condicional
+                                                        fullWidth
+                                                        onClick={token ? () => handleAddToCart(watch) : null} // Click condicional
+                                                        disabled={loading || !token} // Deshabilitar si carga o no hay token
+                                                    >
+                                                        {loading ? "Agregando..." : (token ? "Agregar" : <NavLink to="/auth/login">Inicia Sesión para Comprar</NavLink>)}
                                                     </Button>
                                                 </div>
                                             </div>
@@ -637,27 +272,24 @@ export const RelojesPage = () => {
                                     </Card>
                                 ))}
                             </div>
-
-
-                            <div className="mt-8 flex justify-center">
-                                <div className="flex space-x-1">
-                                    <Button variant="outline" size="sm" className="w-9 h-9 p-0">
-                                        1
-                                    </Button>
-                                    <Button variant="outline" size="sm" className="w-9 h-9 p-0">
-                                        2
-                                    </Button>
-                                    <Button variant="outline" size="sm" className="w-9 h-9 p-0">
-                                        3
-                                    </Button>
-                                    <Button variant="outline" size="sm" className="w-9 h-9 p-0">
-                                        ...
-                                    </Button>
-                                    <Button variant="outline" size="sm" className="w-9 h-9 p-0">
-                                        8
-                                    </Button>
-                                </div>
-                            </div>
+                            <Dialog open={open} onClose={handleClose}>
+                                <DialogContent className="max-w-lg w-full">
+                                    {selectedProduct && (
+                                        <>
+                                            <img
+                                                src={selectedProduct.image}
+                                                alt={selectedProduct.name}
+                                                className="w-full h-64 object-cover rounded"
+                                            />
+                                            <h3 className="mt-4 text-xl font-semibold">{selectedProduct.name}</h3>
+                                            <p className="mt-2 text-gray-700">{selectedProduct.description}</p>
+                                        </>
+                                    )}
+                                </DialogContent>
+                                <DialogActions>
+                                    <Button onClick={handleClose}>Cerrar</Button>
+                                </DialogActions>
+                            </Dialog>
                         </div>
                     </div>
                 </div>
@@ -718,13 +350,7 @@ export const RelojesPage = () => {
                                 height={500}
                                 className="rounded-lg shadow-lg"
                             />
-                            {/* <div className="absolute -bottom-6 -right-6 bg-white p-6 rounded-lg shadow-xl max-w-xs">
-                                <p className="text-sm text-gray-600 mb-2">
-                                    "Un reloj bien cuidado puede funcionar perfectamente durante generaciones y convertirse en una
-                                    herencia familiar."
-                                </p> 
-                                 <p className="text-sm font-medium text-gray-900">— Maestro Relojero ÉLÉGANCE</p>
-                            </div> */}
+
                         </div>
                     </div>
                 </div>

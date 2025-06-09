@@ -1,14 +1,80 @@
 import { useState } from "react"
-import { NavLink } from "react-router-dom"
-import { Mail, Lock } from "lucide-react"
-import { Box, Breadcrumbs, Button, Card, CardContent, CardHeader, Checkbox, FormControlLabel, Grid, IconButton, InputAdornment, TextField, Typography } from "@mui/material"
-import { Person, Visibility, VisibilityOff } from "@mui/icons-material"
+import { NavLink, useNavigate } from "react-router-dom"
+import * as Yup from "yup"
+import { Box, Breadcrumbs, Button, Card, CardContent, CardHeader, CircularProgress, FormControl, Grid, IconButton, InputAdornment, InputLabel, OutlinedInput, TextField, Typography } from "@mui/material"
+import { Visibility, VisibilityOff } from "@mui/icons-material"
 import { JoyeriaAppLayout } from "../../layout/JoyeriaAppLayout"
+import { Field, Form, Formik } from "formik"
+import { register } from "../../services/authServices"
+
 
 
 export const RegisterPage = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    const navigate = useNavigate();
+
+
+
+    const handleClickShowPassword = () => setShowPassword(!showPassword);
+    const handleClickShowConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
+
+
+    //Validacion con Yup
+    const validationSchema = Yup.object({
+        username: Yup.string()
+            .required("El nombre de usuario es requerido")
+            .min(3, "El nombre debe tener al menos 3 caracteres"),
+        email: Yup.string()
+            .email("Correo electrónico no válido")
+            .matches(
+                /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                "Correo electrónico no válido"
+            )
+            .required("Requerido"),
+        password: Yup.string()
+            .min(6, "Minimo 6 caracteres")
+            .matches(/[a-z]/, "Debe contener al menos una letra minúscula")
+            .matches(/[A-Z]/, "Debe contener al menos una letra mayúscula")
+            .matches(/\d/, "Debe contener al menos un número")
+            .matches(
+                /[!@#$%^&*(),.?":{}|<>]/,
+                "Debe contener al menos un carácter especial"
+            )
+            .required("Requerido"),
+        confirmPassword: Yup.string()
+            .required("La confirmación de la contraseña es obligatoria")
+            .oneOf([Yup.ref("password")], "Las contraseñas no coinciden"),
+    });
+
+    const handleSubmit = async (values) => {
+        try {
+            setIsLoading(true) // Activa el Spiner
+            const data = {
+                username: values.username,
+                email: values.email,
+                password: values.password,
+                confirmPassword: values.confirmPassword,
+            };
+
+            await register(data);
+            setSuccessMessage('Registro con éxito. Redirigiendo al login...');
+
+            // Espera 2 segundos antes de redirigir
+            setTimeout(() => {
+                navigate('/auth/login');
+            }, 2000);
+        }
+        catch (err) {
+            console.error("Error al registrar:", (error && error.response && error.response.data) || error.message || error);
+            alert("Error al registrar");
+        }
+        finally {
+            setIsLoading(false); // Desactiva el spinner
+        }
+    }
 
 
     return (
@@ -37,7 +103,7 @@ export const RegisterPage = () => {
                     <div className="max-w-6xl mx-auto">
                         <div className="grid md:grid-cols-2 gap-12 items-start">
                             {/* Left Side - Form */}
-                            <Box maxWidth={500} mx="auto">
+                            <Box sx={{ width: '100%', maxWidth: 400, mx: 'auto' }}>
                                 <Card elevation={6}>
                                     <CardHeader
                                         title={
@@ -49,165 +115,128 @@ export const RegisterPage = () => {
                                                 Crear Cuenta
                                             </Typography>
                                         }
-                                        subheader={
-                                            <Typography
-                                                variant="body2"
-                                                align="center"
-                                                sx={{ color: '#4b5563', pt: 1 }}
-                                            >
-                                                Únete a nuestra exclusiva comunidad de amantes de la joyería de lujo
-                                            </Typography>
-                                        }
-                                        sx={{ pb: 3 }}
                                     />
                                     <CardContent>
-                                        <Grid container spacing={2}>
-                                            {/* Social Buttons */}
-                                            <div className="space-y-3">
-                                                <Button variant="outline" className="w-full h-11" type="button">
-                                                    <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                                                        <path
-                                                            fill="currentColor"
-                                                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                                                        />
-                                                        <path
-                                                            fill="currentColor"
-                                                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                                                        />
-                                                        <path
-                                                            fill="currentColor"
-                                                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                                                        />
-                                                        <path
-                                                            fill="currentColor"
-                                                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                                                        />
-                                                    </svg>
-                                                    Registrar con Google
-                                                </Button>
-                                                <Button variant="outline" className="w-full h-11" type="button">
-                                                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                                                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                                                    </svg>
-                                                    Registrar con Facebook
-                                                </Button>
-                                            </div>
+                                        <Formik
+                                            initialValues={{ username: '', email: '', password: '', confirmPassword: '' }}
+                                            validationSchema={validationSchema}
+                                            onSubmit={handleSubmit}
+                                        >
+                                            {({ errors, touched }) =>
+                                                <Form>
+                                                    <Grid>
+                                                        <Grid>
+                                                            <Field
+                                                                name="username"
+                                                                as={TextField}
+                                                                label="Usuario"
+                                                                variant="outlined"
+                                                                fullWidth
+                                                                margin="normal"
+                                                                error={touched.username && Boolean(errors.username)}
+                                                                helperText={touched.username && errors.username}
+                                                            />
 
-                                            {/* Personal Info */}
-                                            <TextField
-                                                fullWidth
-                                                label="username"
-                                                type="text"
-                                                variant="outlined"
-                                                InputProps={{
-                                                    startAdornment: (
-                                                        <InputAdornment position="start">
-                                                            <Person fontSize="small" sx={{ color: 'gray' }} />
-                                                        </InputAdornment>
-                                                    ),
-                                                }}
-                                            />
-                                            <TextField
-                                                fullWidth
-                                                label="Correo Electrónico"
-                                                type="email"
-                                                variant="outlined"
-                                                InputProps={{
-                                                    startAdornment: (
-                                                        <InputAdornment position="start">
-                                                            <Mail fontSize="small" sx={{ color: 'gray' }} />
-                                                        </InputAdornment>
-                                                    ),
-                                                }}
-                                            />
-                                            {/* Passwords */}
-                                            <TextField
-                                                fullWidth
-                                                label="Contraseña"
-                                                type={showPassword ? 'text' : 'password'}
-                                                variant="outlined"
-                                                InputProps={{
-                                                    startAdornment: (
-                                                        <InputAdornment position="start">
-                                                            <Lock fontSize="small" sx={{ color: 'gray' }} />
-                                                        </InputAdornment>
-                                                    ),
-                                                    endAdornment: (
-                                                        <InputAdornment position="end">
-                                                            <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                                                                {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                                                            </IconButton>
-                                                        </InputAdornment>
-                                                    ),
-                                                }}
-                                            />
+                                                        </Grid>
+                                                        <Grid>
+                                                            <Field
+                                                                name="email"
+                                                                as={TextField}
+                                                                label="Email"
+                                                                variant="outlined"
+                                                                fullWidth
+                                                                margin="normal"
+                                                                error={touched.email && Boolean(errors.email)}
+                                                                helperText={touched.email && errors.email}
+                                                            />
+                                                        </Grid>
+                                                        <Grid>
+                                                            <FormControl variant="outlined" fullWidth margin="normal">
+                                                                <InputLabel htmlFor="password">Contraseña</InputLabel>
+                                                                <Field
+                                                                    label="Contraseña"
+                                                                    name="password"
+                                                                    as={OutlinedInput}
+                                                                    id="password"
+                                                                    type={showPassword ? "text" : "password"}
+                                                                    endAdornment={
+                                                                        <InputAdornment position="end">
+                                                                            <IconButton
+                                                                                edge="end"
+                                                                                onClick={handleClickShowPassword}
+                                                                                aria-label="toggle password visibility"
+                                                                            >
+                                                                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                                            </IconButton>
+                                                                        </InputAdornment>
+                                                                    }
+                                                                    error={touched.password && Boolean(errors.password)}
+                                                                />
+                                                                {touched.password && errors.password && (
+                                                                    <p style={{ color: "red", fontSize: "12px", marginLeft: '12px' }}>{errors.password}</p>
+                                                                )}
+                                                            </FormControl>
+                                                        </Grid>
+                                                        <Grid >
+                                                            <FormControl variant="outlined" fullWidth margin="normal">
+                                                                <InputLabel htmlFor="confirm-password">Confirmar</InputLabel>
+                                                                <Field
+                                                                    label="Confirmar"
+                                                                    name="confirmPassword"
+                                                                    as={OutlinedInput}
+                                                                    id="confirm-password"
+                                                                    type={showConfirmPassword ? "text" : "password"}
+                                                                    endAdornment={
+                                                                        <InputAdornment position="end">
+                                                                            <IconButton
+                                                                                edge="end"
+                                                                                onClick={handleClickShowConfirmPassword}
+                                                                                aria-label="toggle confirm password visibility"
+                                                                            >
+                                                                                {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                                                                            </IconButton>
+                                                                        </InputAdornment>
+                                                                    }
+                                                                    error={
+                                                                        touched.confirmPassword &&
+                                                                        Boolean(errors.confirmPassword)
+                                                                    }
+                                                                />
+                                                                {touched.confirmPassword && errors.confirmPassword && (
+                                                                    <p style={{ color: "red", fontSize: "12px", marginLeft: '12px' }}>{errors.confirmPassword}</p>
+                                                                )}
+                                                            </FormControl>
+                                                        </Grid>
+                                                    </Grid>
+                                                    <div>
+                                                        <Button type="submit" fullWidth variant="contained" sx={{ bgcolor: '#1f2937', height: 45, marginTop: 1, '&:hover': { bgcolor: '#374151' } }}>
+                                                            {isLoading ? <CircularProgress size={24} color="inherit" /> : "Registrar"}
+                                                        </Button>
+                                                        {successMessage && (
+                                                            <div className="bg-green-100 text-green-800 p-3 rounded mt-2">
+                                                                {successMessage}
+                                                            </div>
+                                                        )}
+                                                    </div>
 
-                                            <TextField
-                                                fullWidth
-                                                label="Confirmar Contraseña"
-                                                type={showPassword ? 'text' : 'password'}
-                                                variant="outlined"
-                                                InputProps={{
-                                                    startAdornment: (
-                                                        <InputAdornment position="start">
-                                                            <Lock fontSize="small" sx={{ color: 'gray' }} />
-                                                        </InputAdornment>
-                                                    ),
-                                                    endAdornment: (
-                                                        <InputAdornment position="end">
-                                                            <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                                                                {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                                                            </IconButton>
-                                                        </InputAdornment>
-                                                    ),
-                                                }}
-                                            />
+                                                </Form>
+                                            }
+                                        </Formik>
 
-
-                                            {/* Preferences */}
-                                            <Grid xs={12}>
-                                                <FormControlLabel
-                                                    control={<Checkbox />}
-                                                    label="Quiero recibir ofertas exclusivas, noticias sobre nuevas colecciones y eventos especiales"
-                                                />
-                                            </Grid>
-                                            <Grid xs={12}>
-                                                <FormControlLabel
-                                                    required
-                                                    control={<Checkbox />}
-                                                    label={
-                                                        <Typography variant="body2">
-                                                            Acepto los{' '}
-                                                            <NavLink to="/terminos" underline="always" target="_blank">
-                                                                Términos y Condiciones
-                                                            </NavLink>
-                                                        </Typography>
-                                                    }
-                                                />
-                                            </Grid>
-
-                                            <Grid xs={12}>
-                                                <Button fullWidth variant="contained" color="primary">
-                                                    Crear Cuenta
-                                                </Button>
-                                            </Grid>
-                                            <div className="text-center">
-                                                <p className="text-sm text-gray-600">
-                                                    ¿Ya tienes una cuenta?{" "}
-                                                    <NavLink to="/auth/login" className="text-gray-900 font-medium hover:underline">
-                                                        Inicia sesión aquí
-                                                    </NavLink>
-                                                </p>
-                                            </div>
-                                        </Grid>
+                                        <Typography variant="body2" align="center" sx={{ color: 'gray.600', marginTop: 1 }}>
+                                            ¿Ya tienes una cuenta?{' '}
+                                            <NavLink to="/auth/login" underline="hover" sx={{ color: '#1f2937', fontWeight: 500 }}>
+                                                Iniciar aquí
+                                            </NavLink>
+                                        </Typography>
                                     </CardContent>
                                 </Card>
                             </Box>
 
                             {/* Right Side - Benefits */}
                             <div className="hidden md:block">
-                                <div className="sticky top-8">
-                                    <div className="relative mb-8">
+                                <div className="sticky">
+                                    <div className="relative mb-12">
                                         <img
                                             src="/logo.jpg"
                                             alt="Beneficios de ser miembro"
@@ -219,36 +248,6 @@ export const RegisterPage = () => {
                                     </div>
 
                                     <div className="space-y-6">
-                                        <div className="bg-white p-6 rounded-lg shadow-sm">
-                                            <h3 className="font-semibold text-gray-900 mb-4">Beneficios Exclusivos</h3>
-                                            <div className="space-y-3">
-                                                <div className="flex items-center">
-                                                    <div className="w-2 h-2 bg-amber-400 rounded-full mr-3"></div>
-                                                    <span className="text-sm text-gray-600">Acceso anticipado a nuevas colecciones</span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <div className="w-2 h-2 bg-amber-400 rounded-full mr-3"></div>
-                                                    <span className="text-sm text-gray-600">Descuentos especiales en tu cumpleaños</span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <div className="w-2 h-2 bg-amber-400 rounded-full mr-3"></div>
-                                                    <span className="text-sm text-gray-600">Invitaciones a eventos exclusivos</span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <div className="w-2 h-2 bg-amber-400 rounded-full mr-3"></div>
-                                                    <span className="text-sm text-gray-600">Asesoramiento personalizado gratuito</span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <div className="w-2 h-2 bg-amber-400 rounded-full mr-3"></div>
-                                                    <span className="text-sm text-gray-600">Programa de puntos y recompensas</span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <div className="w-2 h-2 bg-amber-400 rounded-full mr-3"></div>
-                                                    <span className="text-sm text-gray-600">Servicio de limpieza gratuito</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
                                         <div className="bg-gray-50 p-6 rounded-lg">
                                             <h3 className="font-semibold text-gray-900 mb-4">Seguridad y Privacidad</h3>
                                             <div className="space-y-2 text-sm text-gray-600">
@@ -273,7 +272,7 @@ export const RegisterPage = () => {
                     </div>
                 </div>
             </section>
-        </JoyeriaAppLayout>
+        </JoyeriaAppLayout >
 
     )
 }

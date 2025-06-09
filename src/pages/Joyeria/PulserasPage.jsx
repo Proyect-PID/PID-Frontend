@@ -1,204 +1,123 @@
-import { useState } from 'react';
-import { ArrowUpward, Diamond, ExpandMore, Filter, Star } from '@mui/icons-material'
-import { Accordion, AccordionDetails, AccordionSummary, Badge, Breadcrumbs, Button, Card, CardContent, Checkbox, FormControl, FormControlLabel, FormGroup, Grid, InputLabel, MenuItem, Select, Typography } from '@mui/material'
+import { useEffect, useState } from 'react';
+import { Diamond } from '@mui/icons-material'
+import { Breadcrumbs, Button, Card, CardContent, Dialog, DialogActions, DialogContent } from '@mui/material'
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { NavLink } from 'react-router-dom'
-import { Ruler } from 'lucide-react';
+import { Ruler, ShoppingCartIcon } from 'lucide-react';
 import { JoyeriaAppLayout } from '../../layout/JoyeriaAppLayout';
+import { Product } from '../../helpers';
+import { addProductToCart } from '../../services/cartServices';
+
+
+const braceletSizes = [
+    { size: "15cm", name: "XS", description: "Muñeca muy pequeña" },
+    { size: "16cm", name: "S", description: "Muñeca pequeña" },
+    { size: "17cm", name: "M", description: "Muñeca mediana" },
+    { size: "18cm", name: "L", description: "Muñeca grande" },
+    { size: "19cm", name: "XL", description: "Muñeca muy grande" },
+    { size: "20cm+", name: "XXL", description: "Muñeca extra grande" },
+]
+
+const braceletTypes = [
+    {
+        type: "Tennis",
+        name: "Pulseras Tennis",
+        description: "Línea continua de diamantes o piedras preciosas",
+        icon: "◊",
+    },
+    {
+        type: "Charm",
+        name: "Pulseras de Charms",
+        description: "Personalizables con dijes y colgantes",
+        icon: "♡",
+    },
+    {
+        type: "Bangle",
+        name: "Brazaletes",
+        description: "Pulseras rígidas que se deslizan sobre la mano",
+        icon: "○",
+    },
+    {
+        type: "Chain",
+        name: "Pulseras de Cadena",
+        description: "Eslabones entrelazados en diversos estilos",
+        icon: "⧨",
+    },
+    {
+        type: "Cuff",
+        name: "Pulseras Rígidas",
+        description: "Abiertas, se ajustan a la muñeca",
+        icon: "⌒",
+    },
+    {
+        type: "Beaded",
+        name: "Pulseras de Cuentas",
+        description: "Perlas o cuentas ensartadas",
+        icon: "●●●",
+    },
+]
+
 
 export const PulserasPage = () => {
-    const [sortValue, setSortValue] = useState('featured');
+    const [bracelets, setBracelets] = useState([])
+    const [loading, setLoading] = useState(true)
 
-    const handleChange = (event) => {
-        setSortValue(event.target.value);
+    const token = localStorage.getItem('accessToken');
+
+
+    //modal
+    const [open, setOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+
+    const handleClickOpen = (bracelets) => {
+        setSelectedProduct(bracelets)
+        setOpen(true);
     };
 
-    const braceletCategories = [
-        { id: "tennis", name: "Pulseras Tennis" },
-        { id: "charm", name: "Pulseras de Charms" },
-        { id: "bangles", name: "Brazaletes" },
-        { id: "chain", name: "Pulseras de Cadena" },
-        { id: "cuff", name: "Pulseras Rígidas" },
-        { id: "beaded", name: "Pulseras de Cuentas" },
-        { id: "leather", name: "Pulseras de Cuero" },
-        { id: "vintage", name: "Pulseras Vintage" },
-    ]
+    const handleClose = (bracelets) => {
+        setOpen(false);
+        setSelectedProduct(null)
+    };
 
-    const featuredCollections = [
-        {
-            id: 1,
-            name: "Colección Tennis",
-            description: "Elegancia clásica con diamantes en línea continua",
-            image: "/pulcera.webp",
-        },
-        {
-            id: 2,
-            name: "Colección Charms",
-            description: "Cuenta tu historia con charms personalizados",
-            image: "/pulcera.webp",
-        },
-        {
-            id: 3,
-            name: "Colección Moderna",
-            description: "Diseños contemporáneos para el estilo actual",
-            image: "/pulcera.webp",
-        },
-    ]
+    //pulceras
+    useEffect(() => {
+        async function fetchBracelets() {
+            const data = await Product.geteBracelets();
+            if (data) {
+                const allBracelts = Object.values(data)
+                    .flat()
+                    .filter((item) => item)//elimina los nulos
+                setBracelets(allBracelts)
+            }
+            setLoading(false)
 
-    const bracelets = [
-        {
-            id: 1,
-            name: "Pulsera Tennis Diamantes",
-            price: "€3,450",
-            originalPrice: null,
-            image: "/pulcera.webp",
-            rating: 5,
-            isNew: true,
-            category: "Tennis",
-            material: "Oro Blanco 18k",
-            closure: "Cierre Seguridad",
-            size: "17cm",
-        },
-        {
-            id: 2,
-            name: "Brazalete Oro Rosa",
-            price: "€1,850",
-            originalPrice: "€2,100",
-            image: "/pulcera.webp",
-            rating: 5,
-            isNew: false,
-            category: "Brazaletes",
-            material: "Oro Rosa 18k",
-            closure: "Rígido",
-            size: "Ajustable",
-        },
-        {
-            id: 3,
-            name: "Pulsera Charms Plata",
-            price: "€650",
-            originalPrice: null,
-            image: "/pulcera.webp",
-            rating: 4,
-            isNew: false,
-            category: "Charms",
-            material: "Plata Sterling",
-            closure: "Mosquetón",
-            size: "19cm",
-        },
-        {
-            id: 4,
-            name: "Pulsera Cadena Oro",
-            price: "€1,250",
-            originalPrice: null,
-            image: "/pulcera.webp",
-            rating: 5,
-            isNew: true,
-            category: "Cadena",
-            material: "Oro Amarillo 18k",
-            closure: "Mosquetón",
-            size: "18cm",
-        },
-        {
-            id: 5,
-            name: "Pulsera Perlas Cultivadas",
-            price: "€950",
-            originalPrice: null,
-            image: "/pulcera.webp",
-            rating: 4,
-            isNew: false,
-            category: "Cuentas",
-            material: "Oro Blanco 14k",
-            closure: "Elástico",
-            size: "16cm",
-        },
-        {
-            id: 6,
-            name: "Brazalete Zafiros",
-            price: "€2,750",
-            originalPrice: null,
-            image: "/pulcera.webp",
-            rating: 5,
-            isNew: false,
-            category: "Brazaletes",
-            material: "Platino",
-            closure: "Rígido",
-            size: "Ajustable",
-        },
-        {
-            id: 7,
-            name: "Pulsera Cuero Premium",
-            price: "€450",
-            originalPrice: "€550",
-            image: "/pulcera.webp",
-            rating: 4,
-            isNew: false,
-            category: "Cuero",
-            material: "Cuero Italiano",
-            closure: "Hebilla",
-            size: "20cm",
-        },
-        {
-            id: 8,
-            name: "Pulsera Vintage Rubíes",
-            price: "€2,950",
-            originalPrice: null,
-            image: "/pulcera.webp",
-            rating: 5,
-            isNew: true,
-            category: "Vintage",
-            material: "Oro Amarillo 18k",
-            closure: "Cierre Seguridad",
-            size: "17cm",
-        },
-    ]
+        }
+        fetchBracelets()
+    }, []);
 
-    const braceletSizes = [
-        { size: "15cm", name: "XS", description: "Muñeca muy pequeña" },
-        { size: "16cm", name: "S", description: "Muñeca pequeña" },
-        { size: "17cm", name: "M", description: "Muñeca mediana" },
-        { size: "18cm", name: "L", description: "Muñeca grande" },
-        { size: "19cm", name: "XL", description: "Muñeca muy grande" },
-        { size: "20cm+", name: "XXL", description: "Muñeca extra grande" },
-    ]
+    //agregar al carrito
+    const handleAddToCart = async (product) => {
+        if (!product || !product.id) {
+            console.error("El producto no tiene un id definido.");
+            return;
+        }
+        setLoading(true); // Activar el estado de carga al inicio
+        try {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                console.error("No hay token de autenticación, por favor inicia sesión.");
+                return;
+            }
+            await addProductToCart(product, token);
+            // Opcional: mostrar mensaje de éxito o actualizar estado global del carrito
+        } catch (error) {
+            // Manejar error (mostrar alerta, etc.)
+            console.error("Error al agregar al carrito:", error);
+        } finally {
+            setLoading(false); // Desactivar el estado de carga al final (éxito o error)
+        }
+    };
 
-    const braceletTypes = [
-        {
-            type: "Tennis",
-            name: "Pulseras Tennis",
-            description: "Línea continua de diamantes o piedras preciosas",
-            icon: "◊",
-        },
-        {
-            type: "Charm",
-            name: "Pulseras de Charms",
-            description: "Personalizables con dijes y colgantes",
-            icon: "♡",
-        },
-        {
-            type: "Bangle",
-            name: "Brazaletes",
-            description: "Pulseras rígidas que se deslizan sobre la mano",
-            icon: "○",
-        },
-        {
-            type: "Chain",
-            name: "Pulseras de Cadena",
-            description: "Eslabones entrelazados en diversos estilos",
-            icon: "⧨",
-        },
-        {
-            type: "Cuff",
-            name: "Pulseras Rígidas",
-            description: "Abiertas, se ajustan a la muñeca",
-            icon: "⌒",
-        },
-        {
-            type: "Beaded",
-            name: "Pulseras de Cuentas",
-            description: "Perlas o cuentas ensartadas",
-            icon: "●●●",
-        },
-    ]
     return (
         <JoyeriaAppLayout>
             {/* Breadcrumb */}
@@ -213,7 +132,7 @@ export const PulserasPage = () => {
                             to="/pulceras"
                             className="font-medium"
                         >
-                            Pulceras
+                            Pulseras
                         </NavLink>
                     </Breadcrumbs>
                 </div>
@@ -230,47 +149,11 @@ export const PulserasPage = () => {
                 </div>
                 <div className="container mx-auto px-4 h-full flex items-center relative z-10">
                     <div className="max-w-2xl">
-                        <h1 className="text-4xl md:text-5xl font-serif mb-4 text-gray-700">Colección de Pulceras</h1>
+                        <h1 className="text-4xl md:text-5xl font-serif mb-4 text-gray-700">Colección de Pulseras</h1>
                         <p className="text-lg text-black mb-6">
                             Desde elegantes pulseras tennis hasta versátiles pulseras de charms, cada pieza está diseñada para
                             acompañarte en cada momento del día, añadiendo un toque de sofisticación a tu estilo personal.
                         </p>
-                        <div className="flex space-x-4 p-2">
-                            <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100">
-                                Ver Destacados
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Featured Collections */}
-            <section className="py-16 bg-white">
-                <div className="container mx-auto px-4">
-                    <h2 className="text-3xl font-serif text-gray-900 mb-8 text-center">Colecciones Destacadas</h2>
-                    <div className="grid md:grid-cols-3 gap-8">
-                        {featuredCollections.map((collection) => (
-                            <div key={collection.id} className="group cursor-pointer relative overflow-hidden rounded-lg">
-                                <div className="relative h-100 overflow-hidden">
-                                    <img
-                                        src={collection.image || "/placeholder.svg"}
-                                        alt={collection.name}
-                                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent" />
-                                </div>
-                                <div className="absolute bottom-0 left-0 right-0 p-4 text-black">
-                                    <h3 className="text-xl font-semibold mb-2">{collection.name}</h3>
-                                    <p className="text-black mb-4">{collection.description}</p>
-                                    <Button
-                                        variant="outline"
-                                        className="text-black border-white hover:bg-white hover:text-gray-900 transition-colors"
-                                    >
-                                        Explorar Colección
-                                    </Button>
-                                </div>
-                            </div>
-                        ))}
                     </div>
                 </div>
             </section>
@@ -359,251 +242,8 @@ export const PulserasPage = () => {
             <section className="py-12 bg-gray-50">
                 <div className="container mx-auto px-4">
                     <div className="flex flex-col md:flex-row gap-8">
-                        {/* Sidebar Filters */}
-                        <div className="w-full md:w-1/4">
-                            <div className="bg-white p-6 rounded-lg shadow-sm sticky top-4">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-lg font-medium">Filtros</h3>
-                                    <Button variant="ghost" size="sm" className="text-sm text-gray-500">
-                                        Limpiar
-                                    </Button>
-                                </div>
-                                <Accordion>
-                                    <AccordionSummary expandIcon={<ExpandMore />}>
-                                        <Typography variant="body2" fontWeight="medium">
-                                            Tipo de Pulceras
-                                        </Typography>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        {braceletCategories.map((category) => (
-                                            <FormControlLabel
-                                                key={category.id}
-                                                control={<Checkbox size="small" />}
-                                                label={
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        {category.name}
-                                                    </Typography>
-                                                }
-                                            />
-                                        ))}
-                                    </AccordionDetails>
-                                </Accordion>
-                                <Accordion>
-                                    <AccordionSummary expandIcon={<ExpandMore />}>
-                                        <Typography fontSize="0.875rem" fontWeight={500}>Talla</Typography>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        <FormGroup>
-                                            {braceletSizes.map((size, index) => (
-                                                <FormControlLabel
-                                                    key={index}
-                                                    control={<Checkbox size="small" />}
-                                                    label={
-                                                        <Typography fontSize="0.875rem" color="text.secondary">
-                                                            {size.name} - {size.size}
-                                                        </Typography>
-                                                    }
-                                                />
-                                            ))}
-                                        </FormGroup>
-                                    </AccordionDetails>
-                                </Accordion>
-                                <Accordion>
-                                    <AccordionSummary expandIcon={<ExpandMore />}>
-                                        <Typography fontSize="0.875rem" fontWeight={500}>Tipo de Cierre</Typography>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        <FormGroup>
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Mosqueton</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Cierre de Seguridad</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Magnetico</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Elastico</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary"></Typography>}
-                                            />
-                                        </FormGroup>
-                                    </AccordionDetails>
-                                </Accordion>
-
-                                <Accordion>
-                                    <AccordionSummary expandIcon={<ExpandMore />}>
-                                        <Typography fontSize="0.875rem" fontWeight={500}>Precio</Typography>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        <FormGroup>
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary"> Menos de €500</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">€500 - €1,000</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">€1,000 - €2,000</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">€2,000 - €3,000</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Mas de  €3,000</Typography>}
-                                            />
-                                        </FormGroup>
-                                    </AccordionDetails>
-                                </Accordion>
-                                <Accordion>
-                                    <AccordionSummary expandIcon={<ExpandMore />}>
-                                        <Typography fontSize="0.875rem" fontWeight={500}>Material</Typography>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        <FormGroup>
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Oro Amarillo</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Oro Blanco</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Oro Rosa</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Platino</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Plata Sterling</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Cuero</Typography>}
-                                            />
-                                        </FormGroup>
-                                    </AccordionDetails>
-                                </Accordion>
-
-                                <Accordion>
-                                    <AccordionSummary expandIcon={<ExpandMore />}>
-                                        <Typography fontSize="0.875rem" fontWeight={500}>Piedras y Detalles</Typography>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        <FormGroup>
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Diamantes</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Perlas</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Piedras Preciosas</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Sin piedras</Typography>}
-                                            />
-
-                                        </FormGroup>
-                                    </AccordionDetails>
-                                </Accordion>
-                                <Accordion>
-                                    <AccordionSummary expandIcon={<ExpandMore />}>
-                                        <Typography fontSize="0.875rem" fontWeight={500}>Estilos</Typography>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        <FormGroup>
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Clasico</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Moderno</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Vintage</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Deportivo</Typography>}
-                                            />
-                                            <FormControlLabel
-                                                control={<Checkbox size="small" />}
-                                                label={<Typography fontSize="0.875rem" color="text.secondary">Bohemio</Typography>}
-                                            />
-                                        </FormGroup>
-                                    </AccordionDetails>
-                                </Accordion>
-                                <div className="mt-6">
-                                    <Button className="w-full bg-gray-900 hover:bg-gray-800">Aplicar Filtros</Button>
-                                </div>
-                            </div>
-                        </div>
-
                         {/* Products Grid */}
-                        <div className="w-full md:w-3/4">
-                            <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                    <div>
-                                        <h2 className="text-xl font-medium text-gray-900">Pulcera</h2>
-                                        <p className="text-sm text-gray-500">Mostrando {bracelets.length} productos</p>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-center">
-                                            <label htmlFor="sort" className="text-sm text-gray-600 mr-2">
-                                                Ordenar por:
-                                            </label>
-                                            <FormControl sx={{ width: 180, height: 36 }} size="small">
-                                                <InputLabel id="sort-label">Ordenar por</InputLabel>
-                                                <Select
-                                                    labelId="sort-label"
-                                                    value={sortValue}
-                                                    onChange={handleChange}
-                                                    label="Ordenar por"
-                                                    sx={{ fontSize: '0.875rem' }} // text-sm equivalente
-                                                >
-                                                    <MenuItem value="featured">Destacados</MenuItem>
-                                                    <MenuItem value="price-asc">Precio: Menor a Mayor</MenuItem>
-                                                    <MenuItem value="price-desc">Precio: Mayor a Menor</MenuItem>
-                                                    <MenuItem value="newest">Más Recientes</MenuItem>
-                                                    <MenuItem value="rating">Mejor Valorados</MenuItem>
-                                                </Select>
-                                            </FormControl>
-                                        </div>
-                                        <div className="flex border rounded-md">
-                                            <Button variant="ghost" size="sm" className="h-9 px-2.5">
-                                                <Filter className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="sm" className="h-9 px-2.5">
-                                                <ArrowUpward className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
+                        <div className="w-full md:w-4/4">
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {bracelets.map((bracelt) => (
                                     <Card
@@ -619,8 +259,6 @@ export const PulserasPage = () => {
                                                     height={300}
                                                     className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
                                                 />
-                                                {bracelt.isNew && <Badge className="absolute top-3 left-3 ">Nuevo</Badge>}
-                                                {bracelt.originalPrice && <Badge className="absolute top-3 left-3">Oferta</Badge>}
                                                 <Button
                                                     size="sm"
                                                     variant="secondary"
@@ -630,31 +268,27 @@ export const PulserasPage = () => {
                                                 </Button>
                                             </div>
                                             <div className="p-4">
-                                                <div className="flex items-center mb-1">
-                                                    {[...Array(5)].map((_, i) => (
-                                                        <Star
-                                                            key={i}
-                                                            className={`h-4 w-4 ${i < bracelt.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                                                                }`}
-                                                        />
-                                                    ))}
-                                                </div>
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <h3 className="font-medium text-gray-900">{bracelt.name}</h3>
-                                                    <div className="text-right">
-                                                        {bracelt.originalPrice && (
-                                                            <span className="text-sm text-gray-500 line-through block">{bracelt.originalPrice}</span>
-                                                        )}
-                                                        <span className="text-lg font-semibold text-gray-900">{bracelt.price}</span>
-                                                    </div>
-                                                </div>
+                                                <h3 className="font-medium text-gray-900 mb-2">{bracelt.name}</h3>
+                                                <span className="text-lg font-semibold text-gray-900 mb-4 block">{bracelt.price}$</span>
+
+                                                {/* Contenedor vertical para botones con ancho completo */}
                                                 <div className="flex flex-col space-y-2">
-                                                    <div className="flex justify-between text-sm text-gray-500">
-                                                        <span>{bracelt.category}</span>
-                                                        <span>{bracelt.material}</span>
-                                                    </div>
-                                                    <Button size="sm" className="w-full bg-gray-900 hover:bg-gray-800">
+                                                    <Button
+                                                        variant="contained"
+                                                        onClick={() => handleClickOpen(bracelt)}
+                                                        fullWidth
+                                                    >
                                                         Ver Detalles
+                                                    </Button>
+
+                                                    <Button
+                                                        variant="outlined"
+                                                        startIcon={token ? <ShoppingCartIcon /> : null} // Icono condicional
+                                                        fullWidth
+                                                        onClick={token ? () => handleAddToCart(bracelt) : null} // Click condicional
+                                                        disabled={loading || !token} // Deshabilitar si carga o no hay token
+                                                    >
+                                                        {loading ? "Agregando..." : (token ? "Agregar" : <NavLink to="/auth/login">Inicia Sesión para Comprar</NavLink>)}
                                                     </Button>
                                                 </div>
                                             </div>
@@ -663,25 +297,24 @@ export const PulserasPage = () => {
                                 ))}
                             </div>
 
-                            <div className="mt-8 flex justify-center">
-                                <div className="flex space-x-1">
-                                    <Button variant="outline" size="sm" className="w-9 h-9 p-0">
-                                        1
-                                    </Button>
-                                    <Button variant="outline" size="sm" className="w-9 h-9 p-0">
-                                        2
-                                    </Button>
-                                    <Button variant="outline" size="sm" className="w-9 h-9 p-0">
-                                        3
-                                    </Button>
-                                    <Button variant="outline" size="sm" className="w-9 h-9 p-0">
-                                        ...
-                                    </Button>
-                                    <Button variant="outline" size="sm" className="w-9 h-9 p-0">
-                                        8
-                                    </Button>
-                                </div>
-                            </div>
+                            <Dialog open={open} onClose={handleClose}>
+                                <DialogContent className="max-w-lg w-full">
+                                    {selectedProduct && (
+                                        <>
+                                            <img
+                                                src={selectedProduct.image}
+                                                alt={selectedProduct.name}
+                                                className="w-full h-64 object-cover rounded"
+                                            />
+                                            <h3 className="mt-4 text-xl font-semibold">{selectedProduct.name}</h3>
+                                            <p className="mt-2 text-gray-700">{selectedProduct.description}</p>
+                                        </>
+                                    )}
+                                </DialogContent>
+                                <DialogActions>
+                                    <Button onClick={handleClose}>Cerrar</Button>
+                                </DialogActions>
+                            </Dialog>
                         </div>
                     </div>
                 </div>
